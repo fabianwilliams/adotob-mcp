@@ -1,11 +1,15 @@
 /**
- * Receipt timeline — vertical sequence of the 6 audit-trail checks.
+ * Receipt timeline — vertical sequence of the audit-trail checks, bucketed into
+ * three methodology phases: Admission, Processing, Fulfillment.
  *
  * Color rules per shared context:
  *   pass = green (#22c55e) check
  *   fail = red (#ef4444) x
  *   skip = subtext (#8888a0) dash
  *   warn = orange-yellow check
+ *
+ * Phase mapping is keyed by check.id so the canonical receipt JSON shape stays
+ * unchanged on the wire — the bucketing is a UI-level projection.
  */
 
 type CheckStatus = "pass" | "fail" | "warn" | "skip";
@@ -21,6 +25,40 @@ interface AuditCheck {
 interface ReceiptTimelineProps {
   checks: AuditCheck[];
 }
+
+type PhaseKey = "admission" | "processing" | "fulfillment";
+
+interface PhaseDef {
+  key: PhaseKey;
+  label: string;
+  subtitle: string;
+  accent: string;
+  checkIds: string[];
+}
+
+const PHASES: PhaseDef[] = [
+  {
+    key: "admission",
+    label: "1 · Admission gates",
+    subtitle: "Should this request even proceed?",
+    accent: "#22d3ee",
+    checkIds: ["input_validation", "rate_limit", "cost_ceiling"],
+  },
+  {
+    key: "processing",
+    label: "2 · Processing",
+    subtitle: "Capture the lead, sign the entitlement.",
+    accent: "#6366f1",
+    checkIds: ["brevo_contact_upsert", "download_token_mint"],
+  },
+  {
+    key: "fulfillment",
+    label: "3 · Fulfillment",
+    subtitle: "Deliver the goods to the customer.",
+    accent: "#22c55e",
+    checkIds: ["fulfillment_dispatch"],
+  },
+];
 
 function formatCheckTime(iso: string): string {
   try {
@@ -95,52 +133,125 @@ function StatusLabel({ status }: { status: CheckStatus }) {
   );
 }
 
+function CheckRow({
+  check,
+  isLastInPhase,
+}: {
+  check: AuditCheck;
+  isLastInPhase: boolean;
+}) {
+  return (
+    <li className="relative flex gap-4 pb-6 last:pb-0">
+      {!isLastInPhase && (
+        <span
+          aria-hidden="true"
+          className="absolute left-[13px] top-8 bottom-0 w-px bg-[#1e1e2e]"
+        />
+      )}
+      <div className="relative z-10 flex-shrink-0 pt-0.5">
+        <StatusBadge status={check.status} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-wrap mb-1">
+          <h3 className="text-base font-semibold text-[#e8e8ed]">
+            {check.name}
+          </h3>
+          <StatusLabel status={check.status} />
+        </div>
+        <p className="text-sm text-[#8888a0] leading-relaxed mb-1">
+          {check.details}
+        </p>
+        <p className="text-xs text-[#8888a0]/70 font-mono">
+          {formatCheckTime(check.at_iso)}
+        </p>
+      </div>
+    </li>
+  );
+}
+
 export function ReceiptTimeline({ checks }: ReceiptTimelineProps) {
+  const checksById = new Map(checks.map((c) => [c.id, c]));
+  const knownIds = new Set(PHASES.flatMap((p) => p.checkIds));
+  const orphanChecks = checks.filter((c) => !knownIds.has(c.id));
+
   return (
     <section
       aria-label="Supervision-layer audit trail"
       className="rounded-xl border border-[#1e1e2e] bg-[#13131a] p-6 sm:p-8"
     >
-      <div className="mb-6">
+      <div className="mb-8">
         <p className="text-xs font-semibold uppercase tracking-[3px] text-[#6366f1] mb-2">
           Supervision-layer audit trail
         </p>
         <h2 className="text-xl font-bold text-[#e8e8ed]">
           Every check that fired, in order.
         </h2>
+        <p className="text-sm text-[#8888a0] mt-2 leading-relaxed">
+          Bucketed into three methodology phases &mdash; admission, processing, fulfillment.
+        </p>
       </div>
-      <ol className="space-y-0">
-        {checks.map((check, idx) => {
-          const isLast = idx === checks.length - 1;
+
+      <div className="space-y-8">
+        {PHASES.map((phase) => {
+          const phaseChecks = phase.checkIds
+            .map((id) => checksById.get(id))
+            .filter((c): c is AuditCheck => c !== undefined);
+
+          if (phaseChecks.length === 0) {
+            return null;
+          }
+
           return (
-            <li key={check.id} className="relative flex gap-4 pb-6 last:pb-0">
-              {!isLast && (
-                <span
-                  aria-hidden="true"
-                  className="absolute left-[13px] top-8 bottom-0 w-px bg-[#1e1e2e]"
-                />
-              )}
-              <div className="relative z-10 flex-shrink-0 pt-0.5">
-                <StatusBadge status={check.status} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 flex-wrap mb-1">
-                  <h3 className="text-base font-semibold text-[#e8e8ed]">
-                    {check.name}
-                  </h3>
-                  <StatusLabel status={check.status} />
-                </div>
-                <p className="text-sm text-[#8888a0] leading-relaxed mb-1">
-                  {check.details}
+            <div key={phase.key}>
+              <div
+                className="border-l-2 pl-4 mb-4"
+                style={{ borderColor: phase.accent }}
+              >
+                <p
+                  className="text-xs font-semibold uppercase tracking-[2px] mb-1"
+                  style={{ color: phase.accent }}
+                >
+                  {phase.label}
                 </p>
-                <p className="text-xs text-[#8888a0]/70 font-mono">
-                  {formatCheckTime(check.at_iso)}
+                <p className="text-sm text-[#8888a0] italic">
+                  {phase.subtitle}
                 </p>
               </div>
-            </li>
+              <ol className="space-y-0">
+                {phaseChecks.map((check, idx) => (
+                  <CheckRow
+                    key={check.id}
+                    check={check}
+                    isLastInPhase={idx === phaseChecks.length - 1}
+                  />
+                ))}
+              </ol>
+            </div>
           );
         })}
-      </ol>
+
+        {orphanChecks.length > 0 && (
+          <div>
+            <div className="border-l-2 border-[#8888a0] pl-4 mb-4">
+              <p className="text-xs font-semibold uppercase tracking-[2px] mb-1 text-[#8888a0]">
+                Other checks
+              </p>
+              <p className="text-sm text-[#8888a0] italic">
+                Checks not yet assigned to a phase.
+              </p>
+            </div>
+            <ol className="space-y-0">
+              {orphanChecks.map((check, idx) => (
+                <CheckRow
+                  key={check.id}
+                  check={check}
+                  isLastInPhase={idx === orphanChecks.length - 1}
+                />
+              ))}
+            </ol>
+          </div>
+        )}
+      </div>
     </section>
   );
 }
