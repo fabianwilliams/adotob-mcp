@@ -17,8 +17,8 @@ export default function HomePage() {
           MCP-Callable Storefront
         </h1>
         <p className="text-lg text-[#8888a0] mb-10 leading-relaxed">
-          An agent-callable storefront for the Adotob Agent Reliability Kit. Connect
-          your Claude or ChatGPT to{" "}
+          An agent-callable storefront for the Adotob Agent Reliability Kit. Point any
+          MCP-capable client (Claude, ChatGPT, LM Studio, Cursor, custom code) at{" "}
           <code className="text-[#22d3ee] bg-[#1e1e2e] px-2 py-0.5 rounded text-base">
             https://mcp.adotob.com/api/a2a/mcp
           </code>{" "}
@@ -27,10 +27,18 @@ export default function HomePage() {
         </p>
         <div className="flex justify-center gap-4 flex-wrap">
           <a
-            href="https://estore.adotob.com/partners"
+            href="https://github.com/fabianwilliams/adotob-mcp/blob/main/docs/HAPPY-PATH-SOP.md"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block bg-[#6366f1] hover:bg-[#5254e0] text-white px-6 py-3 rounded-lg text-sm font-semibold transition-colors"
           >
-            About the methodology &rarr;
+            Try it in 2 minutes &rarr;
+          </a>
+          <a
+            href="https://estore.adotob.com/partners"
+            className="inline-block border border-[#1e1e2e] hover:border-[#6366f1] hover:text-[#6366f1] text-[#e8e8ed] px-6 py-3 rounded-lg text-sm font-semibold transition-colors"
+          >
+            About the methodology
           </a>
           <a
             href="https://github.com/fabianwilliams/agentic-engineering-toolkit"
@@ -42,7 +50,7 @@ export default function HomePage() {
           </a>
         </div>
         <p className="text-xs text-[#8888a0]/60 mt-12 italic">
-          This surface is by invitation. The MCP endpoint is rate-limited. Receipt URLs expire after 30 days.
+          The MCP endpoint is rate-limited (5/hr per IP, 10/24h) and gated by a $5/day cost ceiling. Receipt URLs are publicly readable for 30 days.
         </p>
       </div>
     </main>
