@@ -63,13 +63,13 @@ Run captured 2026-05-16, ~10:15 AM ET. Receipt: `rcpt_2026-05-16_0a96ef3d`.
 
 Settings → Connectors → "Add custom connector." Paste the URL, name it (any name — "ADOTOB Store" used here), click Add.
 
-![Add custom connector dialog in Claude Desktop, URL pasted](/img/sop/claude_desktop_1_setupconnector.png)
+![Add custom connector dialog in Claude Desktop, URL pasted](../public/img/sop/claude_desktop_1_setupconnector.png)
 
 ### 2. Confirm the tool was discovered
 
 After saving, the connector page shows the endpoint, the `purchase_free_bundle` tool, and a permission toggle. (Setting it to "Always allow" is optional — "Ask each time" works too.)
 
-![purchase_free_bundle tool discovered, permission set to Always allow](/img/sop/claude_desktop_2_setupconnector_finishwithpermissions.png)
+![purchase_free_bundle tool discovered, permission set to Always allow](../public/img/sop/claude_desktop_2_setupconnector_finishwithpermissions.png)
 
 ### 3. Compose the prompt
 
@@ -80,35 +80,35 @@ Use the Adotob MCP demo to request the free-trial bundle.
 My first name is [Your Name] and my email is [yourgmail]@gmail.com.
 ```
 
-![Empty prompt with the template wording](/img/sop/claude_desktop_3_prompt_to_run_template.png)
+![Empty prompt with the template wording](../public/img/sop/claude_desktop_3_prompt_to_run_template.png)
 
 Fill in real values. Example run uses "Keyser."
 
-![Prompt with real first name + email substituted in](/img/sop/claude_desktop_4_prompt_to_run_actual.png)
+![Prompt with real first name + email substituted in](../public/img/sop/claude_desktop_4_prompt_to_run_actual.png)
 
 ### 4. Watch the tool call execute
 
 Claude announces the call ("Got it — submitting your request now") and invokes `purchase_free_bundle`.
 
-![Claude invoking the purchase_free_bundle tool](/img/sop/claude_desktop_5_prompt_running.png)
+![Claude invoking the purchase_free_bundle tool](../public/img/sop/claude_desktop_5_prompt_running.png)
 
 ### 5. See the receipt summary inline
 
 Claude renders the `markdown_summary` returned by the tool — receipt ID, status, bundle name, and direct links to the download and the full receipt page.
 
-![Receipt summary rendered inline in the Claude conversation](/img/sop/claude_desktop_6_success.png)
+![Receipt summary rendered inline in the Claude conversation](../public/img/sop/claude_desktop_6_success.png)
 
 ### 6. The fulfillment email arrives
 
 Within ~30 seconds, the email lands. It carries the signed 24h download link and the public audit-trail receipt URL.
 
-![Gmail showing the fulfillment email with download button + receipt link](/img/sop/claude_desktop_7_success_emailproof.png)
+![Gmail showing the fulfillment email with download button + receipt link](../public/img/sop/claude_desktop_7_success_emailproof.png)
 
 ### 7. The download is real
 
 Clicking "Download bundle" pulls a real zip — architecture overview, sample-agent writer, README, HEARTBEAT.md, and the v1.0 bundle.
 
-![Free-trial-sample bundle contents in the Downloads folder](/img/sop/claude_desktop_8_success_pkg_download.png)
+![Free-trial-sample bundle contents in the Downloads folder](../public/img/sop/claude_desktop_8_success_pkg_download.png)
 
 ### 8. The public audit-trail receipt — the artifact
 
@@ -120,7 +120,7 @@ This is what every partner conversation will reference. Header tile (requester /
 
 Every check renders with a green PASS badge and a timestamp. The requester's email never appears on this page; only the first name.
 
-![Full audit-trail receipt page with all 6 checks bucketed into 3 phases](/img/sop/claude_desktop_9_success_Full_EmailRecpt.png)
+![Full audit-trail receipt page with all 6 checks bucketed into 3 phases](../public/img/sop/claude_desktop_9_success_Full_EmailRecpt.png)
 
 **Live URL (publicly readable, no auth):** [rcpt_2026-05-16_0a96ef3d](https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_0a96ef3d)
 
@@ -138,7 +138,7 @@ Run captured 2026-05-16, ~10:41 AM ET. Receipt: `rcpt_2026-05-16_7f1fd149`.
 
 LM Studio model loader for Qwen3.6 27B (Q4_K_M GGUF, 4096-token context, full GPU offload on M3 Max).
 
-![LM Studio loading Qwen3.6 27B locally](/img/sop/LMStudio_QWEN3-6_LocalModel_1_setupconnector.png)
+![LM Studio loading Qwen3.6 27B locally](../public/img/sop/LMStudio_QWEN3-6_LocalModel_1_setupconnector.png)
 
 ### 2. Configure the MCP server (JSON config, not a UI dialog)
 
@@ -156,37 +156,37 @@ LM Studio uses an `mcp.json` config file. The full config is three lines:
 
 After saving, the Integrations panel shows `mcp/adotob` enabled and `purchase_free_bundle` discovered.
 
-![mcp.json config + purchase_free_bundle tool discovered in the LM Studio Integrations panel](/img/sop/LMStudio_QWEN3-6_LocalModel_2_setupconnector_done.png)
+![mcp.json config + purchase_free_bundle tool discovered in the LM Studio Integrations panel](../public/img/sop/LMStudio_QWEN3-6_LocalModel_2_setupconnector_done.png)
 
 ### 3. Send the prompt
 
 Same template, different test identity ("JahMekYan").
 
-![Prompt sent to the local Qwen model with the mcp/adotob integration enabled](/img/sop/LMStudio_QWEN3-6_LocalModel_3_PromptStarting.png)
+![Prompt sent to the local Qwen model with the mcp/adotob integration enabled](../public/img/sop/LMStudio_QWEN3-6_LocalModel_3_PromptStarting.png)
 
 ### 4. The local model decides to call the tool
 
 Qwen3.6's reasoning is visible: it parses the request, identifies the right tool, fills in the arguments. Watching a local 27B open-weights model do tool selection cleanly is the demo within the demo.
 
-![Qwen3.6 thinking through the request and generating the tool call arguments](/img/sop/LMStudio_QWEN3-6_LocalModel_4_PromptRunning.png)
+![Qwen3.6 thinking through the request and generating the tool call arguments](../public/img/sop/LMStudio_QWEN3-6_LocalModel_4_PromptRunning.png)
 
 ### 5. The tool call succeeds — same receipt schema
 
 Response includes status, bundle, source = `mcp`, signed download URL, and the public receipt URL. The GPU dashboard in the corner confirms this ran on local Apple Silicon (no cloud inference).
 
-![Tool call result rendered in LM Studio — receipt URL + download URL + GPU activity](/img/sop/LMStudio_QWEN3-6_LocalModel_5_Success.png)
+![Tool call result rendered in LM Studio — receipt URL + download URL + GPU activity](../public/img/sop/LMStudio_QWEN3-6_LocalModel_5_Success.png)
 
 ### 6. The same fulfillment email lands
 
 Identical email template, different first name.
 
-![Gmail showing the fulfillment email for the LM Studio run](/img/sop/LMStudio_QWEN3-6_LocalModel_6_Success_EmailProof.png)
+![Gmail showing the fulfillment email for the LM Studio run](../public/img/sop/LMStudio_QWEN3-6_LocalModel_6_Success_EmailProof.png)
 
 ### 7. The same audit-trail receipt format
 
 Same page layout, same three phases, same six checks, all green. The endpoint genuinely does not care which client called it.
 
-![Audit-trail receipt page for the LM Studio run](/img/sop/LMStudio_QWEN3-6_LocalModel_7_Success_RecptProof.png)
+![Audit-trail receipt page for the LM Studio run](../public/img/sop/LMStudio_QWEN3-6_LocalModel_7_Success_RecptProof.png)
 
 **Live URL:** [rcpt_2026-05-16_7f1fd149](https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_7f1fd149)
 
