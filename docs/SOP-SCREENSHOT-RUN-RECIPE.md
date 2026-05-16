@@ -12,6 +12,8 @@ Two things in this doc:
 1. **Reading order** through the licensing artifact set (high-level → low-level), so you know what to skim before the run.
 2. **The recipe** — exactly what to click, paste, prompt, and capture for the 7 screenshots that drop into `HAPPY-PATH-SOP.md`.
 
+> **Framing note.** `HAPPY-PATH-SOP.md` is **client-agnostic** — it explicitly tells the reader that any MCP-capable client works (Claude, ChatGPT custom connectors, LM Studio 0.3.17+, Cursor, Windsurf, Cline, OpenAI Responses API code, etc.). Your dogfood run happens to be on Claude because that's what you have at the keyboard — so the 7 screenshots are the **Claude example** of the generic flow. Caption them that way when you wire them into the SOP (Step 3 of "Post-run" below).
+
 ---
 
 ## 1. Reading order (5–10 min skim)
@@ -138,8 +140,10 @@ cp ~/Desktop/sop-screenshot-2.png  ~/projects/adotob-mcp/public/img/sop/
 Then edit `adotob-mcp/docs/HAPPY-PATH-SOP.md` and replace each `[SCREENSHOT N placeholder — ...]` line with:
 
 ```markdown
-![Screenshot N caption](/img/sop/sop-screenshot-N.png)
+![Screenshot N caption (Claude example)](/img/sop/sop-screenshot-N.png)
 ```
+
+(Including "Claude example" in each caption reinforces that the screenshot is one illustration of the generic flow, not a claim that Claude is required.)
 
 Commit + push:
 

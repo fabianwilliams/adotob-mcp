@@ -19,26 +19,40 @@ A public MCP server that processes a real free-trial-bundle purchase, returns an
 
 ## What you need
 
-- A Claude Desktop install, Claude.ai with custom-connectors enabled, OR Claude Code with MCP support — any one is fine.
+- **An MCP-capable client.** Any of: Claude Desktop / Claude.ai / Claude Code, ChatGPT (Pro / Team / Enterprise — custom connectors), LM Studio (0.3.17+), Cursor, Windsurf, Cline, Continue, Zed, or any custom code using the MCP SDK. The endpoint speaks **Streamable HTTP MCP** (JSON-RPC 2.0 over a single POST URL), so any conformant client works — there is nothing Anthropic-specific about it.
 - An email address you can check for the download link (the demo sends a real email).
 - About 2 minutes.
 
 You do **not** need:
 - A bearer token or API key
-- To create a tool definition manually
-- Anthropic API access (unless you are doing Path B below)
+- To create a tool definition manually (the client discovers it via `tools/list`)
+- Anthropic OR OpenAI API access (unless you are doing Path B below with raw HTTP)
 
 ---
 
-## Path A — Zero-friction (Claude Desktop / Claude.ai / Claude Code)
+## Path A — Zero-friction (any MCP-capable client)
 
-Use this path if you have any Claude surface with "custom connector" or "MCP server" support.
+Use this path if you have any client that can register a remote MCP server URL. The instructions below describe the generic 5-step pattern. The example screenshots happen to be from Claude (it's what the operator had at capture time), but the same flow works in ChatGPT, LM Studio, Cursor, and every other MCP-capable client — only the location of the "add MCP server" UI changes.
 
-### Step 1. Open Claude's MCP / connector settings
+### Where to find "Add MCP server" in each client
 
-In Claude Desktop or Claude.ai: open Settings → Connectors → "Add custom connector" (or equivalent button — the UI label may shift with releases).
+| Client | Where the UI lives |
+|---|---|
+| Claude Desktop / Claude.ai | Settings → Connectors → **Add custom connector** |
+| Claude Code | `claude mcp add --transport http adotob https://mcp.adotob.com/api/a2a/mcp` |
+| ChatGPT (Pro / Team / Enterprise) | Settings → Connectors → **Add MCP server** |
+| LM Studio (0.3.17+) | Program (right sidebar) → **Install** → Add MCP server |
+| Cursor | Settings → MCP → **Add new MCP server** (JSON config) |
+| Windsurf / Cline / Continue / Zed | MCP / Tools section in the client's settings |
+| Custom code (OpenAI Responses API, Anthropic SDK, etc.) | See **Path B** below for the explicit tool definition |
 
-*[SCREENSHOT 1 placeholder — the empty "Add custom connector" dialog]*
+UI labels shift between releases. The constant: paste the endpoint URL into the client's MCP / connector field. That's the whole config.
+
+### Step 1. Open your client's MCP / connector settings
+
+Use the table above to find where the "add connector" / "add MCP server" UI lives in your client. The example screenshot is from Claude Desktop; the equivalent dialog in ChatGPT, LM Studio, Cursor etc. accepts the same single URL.
+
+*[SCREENSHOT 1 placeholder — the empty "Add custom connector" dialog (Claude example)]*
 
 ### Step 2. Paste the URL
 
@@ -54,27 +68,27 @@ Name the connector anything — "Adotob MCP demo" works. Save.
 
 *[SCREENSHOT 2 placeholder — the URL pasted, save button about to be clicked]*
 
-### Step 3. Confirm Claude discovers the tool
+### Step 3. Confirm the client discovered the tool
 
-After saving, Claude should show "1 tool discovered" or "purchase_free_bundle (1 tool)." This is Claude calling our `initialize` and `tools/list` methods. No extra config from you.
+After saving, the client should show something like "1 tool discovered" or `purchase_free_bundle`. This is the client calling our `initialize` and `tools/list` JSON-RPC methods automatically. No extra config from you.
 
-*[SCREENSHOT 3 placeholder — Claude showing the tool in the connectors list]*
+*[SCREENSHOT 3 placeholder — the tool appearing in the connectors list (Claude example)]*
 
-### Step 4. Ask Claude to run the tool
+### Step 4. Ask the model to run the tool
 
-In any Claude conversation, ask:
+In any conversation with the model (Claude, a GPT-4-class model in ChatGPT, a local model hosted in LM Studio, an OpenAI-backed agent in Cursor — whatever your client is wired to), prompt:
 
 > *"Use the Adotob MCP demo to request the free-trial bundle. My first name is [Your Name] and my email is [yourgmail]@gmail.com."*
 
-Claude will:
-1. Ask permission once to use the new tool
-2. Show the inputs it is about to send (first_name + email)
+The client will:
+1. Ask permission once to use the new tool (most MCP clients gate this — by design)
+2. Show the inputs it is about to send (`first_name` + `email`)
 3. Call the tool
 4. Display the receipt summary (`markdown_summary` field) in the conversation
 
-*[SCREENSHOT 4 placeholder — Claude asking for permission to call the tool]*
+*[SCREENSHOT 4 placeholder — permission prompt to call the tool (Claude example)]*
 
-*[SCREENSHOT 5 placeholder — Claude showing the receipt summary inline]*
+*[SCREENSHOT 5 placeholder — receipt summary rendered inline (Claude example)]*
 
 ### Step 5. Check your email
 
@@ -117,9 +131,9 @@ If any check fails, the receipt still renders the full audit trail with the fail
 
 ---
 
-## Path B — Raw API (custom code, OpenAI/Anthropic SDKs)
+## Path B — Raw API (custom code, any LLM provider)
 
-Use this path if you are building tool-using code outside Claude Desktop — for example, an internal agent your firm built on the Anthropic or OpenAI API.
+Use this path if you are building tool-using code outside an off-the-shelf MCP client — for example, an internal agent your firm built on the OpenAI Responses API, the Anthropic Messages API, Azure OpenAI, Amazon Bedrock, Google Gemini's function-calling API, or any HTTP-aware runtime. The endpoint is provider-neutral; the same JSON below works regardless of which model is calling it.
 
 ### Tool definition (paste into your code)
 
