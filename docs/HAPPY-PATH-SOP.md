@@ -221,12 +221,21 @@ Use this path if you are building tool-using code outside an off-the-shelf MCP c
     "properties": {
       "first_name": {"type": "string", "minLength": 1, "maxLength": 100},
       "email":      {"type": "string", "format": "email"},
-      "bundle":     {"type": "string", "enum": ["free-trial-sample"], "default": "free-trial-sample"}
+      "bundle":     {"type": "string", "enum": ["free-trial-sample"], "default": "free-trial-sample"},
+      "idempotency_key": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9._-]+$",
+        "description": "Optional but recommended for production agents. Caller-generated unique value (e.g. UUIDv4). Same key + same email returns the original receipt instead of re-running the flow. Closes NEXUM-004 from the Nexum trust-manifest."
+      }
     },
     "required": ["first_name", "email"]
   }
 }
 ```
+
+> **Production agents: supply `idempotency_key`.** Without it, a retry on timeout will double-issue the bundle and double-fire the fulfillment email. You can pass the key as a tool argument *or* as an `Idempotency-Key` HTTP header. The server prefers the argument when both are present.
 
 ### MCP call shape
 

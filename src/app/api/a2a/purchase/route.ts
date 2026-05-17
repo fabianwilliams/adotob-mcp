@@ -20,6 +20,7 @@ interface PurchaseBody {
   first_name?: unknown;
   email?: unknown;
   bundle?: unknown;
+  idempotency_key?: unknown;
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -37,6 +38,12 @@ export async function POST(req: Request): Promise<Response> {
   const email = typeof body.email === "string" ? body.email : "";
   const bundle = typeof body.bundle === "string" ? body.bundle : undefined;
 
+  // NEXUM-004 idempotency. Body field takes precedence; otherwise header.
+  const idempotency_key =
+    typeof body.idempotency_key === "string"
+      ? body.idempotency_key
+      : (req.headers.get("idempotency-key") ?? undefined);
+
   const ua = req.headers.get("user-agent") ?? "";
 
   const receipt = await runPurchase({
@@ -46,6 +53,7 @@ export async function POST(req: Request): Promise<Response> {
     source: "raw_http",
     user_agent: ua,
     request: req,
+    idempotency_key,
   });
 
   const httpStatus = receipt.result.status === "success" ? 200 : 422;

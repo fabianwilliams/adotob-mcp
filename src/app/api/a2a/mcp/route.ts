@@ -23,7 +23,8 @@ const TOOL_NAME = "purchase_free_bundle";
 const TOOL_SCHEMA = {
   name: TOOL_NAME,
   description:
-    "Request the Adotob Agent Reliability Kit free-trial bundle. Returns an audit-trail receipt with download URL. Requires first_name and email.",
+    "Request the Adotob Agent Reliability Kit free-trial bundle. Returns an audit-trail receipt with download URL. Requires first_name and email. " +
+    "Strongly recommended for production agents: supply an idempotency_key (or send an Idempotency-Key HTTP header) so a retry on timeout returns the original receipt instead of double-issuing the bundle.",
   inputSchema: {
     type: "object",
     properties: {
@@ -33,6 +34,14 @@ const TOOL_SCHEMA = {
         type: "string",
         enum: ["free-trial-sample"],
         default: "free-trial-sample",
+      },
+      idempotency_key: {
+        type: "string",
+        minLength: 8,
+        maxLength: 128,
+        pattern: "^[A-Za-z0-9._-]+$",
+        description:
+          "Optional but recommended. A caller-generated unique value (e.g. UUIDv4). If the same key is supplied with the same email twice, the original receipt is returned instead of re-running the flow. Closes NEXUM-004 (IdempotencyMissing) from the Nexum trust-manifest.",
       },
     },
     required: ["first_name", "email"],
@@ -57,6 +66,7 @@ interface PurchaseArgs {
   first_name?: unknown;
   email?: unknown;
   bundle?: unknown;
+  idempotency_key?: unknown;
 }
 
 function jsonRpcError(
@@ -142,6 +152,12 @@ export async function POST(req: Request): Promise<Response> {
     const email = typeof args.email === "string" ? args.email : "";
     const bundle = typeof args.bundle === "string" ? args.bundle : undefined;
 
+    // NEXUM-004 idempotency. Arg takes precedence; otherwise HTTP header.
+    const idempotency_key =
+      typeof args.idempotency_key === "string"
+        ? args.idempotency_key
+        : (req.headers.get("idempotency-key") ?? undefined);
+
     const ua = req.headers.get("user-agent") ?? "";
     const receipt = await runPurchase({
       first_name,
@@ -150,6 +166,7 @@ export async function POST(req: Request): Promise<Response> {
       source: "mcp",
       user_agent: ua,
       request: req,
+      idempotency_key,
     });
 
     return jsonRpcResult(id, buildToolCallResult(receipt));
