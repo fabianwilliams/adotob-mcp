@@ -67,6 +67,7 @@ src/
     brevo-mcp.ts            Contact upsert + onboarding email
     download-tokens.ts      JOSE HS256 mint
     audit-trail.ts          Canonical check labels + types
+    idempotency.ts          NEXUM-004 fix: (key, email) -> receipt_id Table Storage
   components/
     receipt-timeline.tsx    3-phase bucketed audit trail
     receipt-header.tsx      Requester / bundle / issued tile

@@ -31,7 +31,12 @@ import { checkRateLimit } from "./rate-limit";
 import { checkCostCeiling } from "./cost-ceiling";
 import { sendOnboardingEmail, upsertContact, type BrevoSource } from "./brevo-mcp";
 import { buildDownloadUrl, mintDownloadToken } from "./download-tokens";
-import { newReceiptId, saveReceipt } from "./receipt-store";
+import { newReceiptId, loadReceipt, saveReceipt } from "./receipt-store";
+import {
+  findCachedReceiptId,
+  normalizeIdempotencyKey,
+  storeIdempotencyMapping,
+} from "./idempotency";
 
 export type PurchaseSource = "mcp" | "raw_http";
 
@@ -42,6 +47,16 @@ export interface PurchaseInput {
   source: PurchaseSource;
   user_agent?: string;
   request?: Request;
+  /**
+   * Optional caller-supplied idempotency key (closes NEXUM-004).
+   * If provided AND a prior receipt exists for the (key, email) pair,
+   * the original receipt is returned exactly as-is instead of re-running
+   * the 6-check flow. Stripe-style semantics.
+   *
+   * Accepted via the MCP tool argument `idempotency_key` or the HTTP
+   * header `Idempotency-Key`. Must be 8-128 chars, [A-Za-z0-9._-].
+   */
+  idempotency_key?: string;
 }
 
 export interface PurchaseReceipt {
@@ -98,6 +113,26 @@ function skipReason(prevFailedId: CheckId): AuditCheck {
 export async function runPurchase(
   input: PurchaseInput,
 ): Promise<PurchaseReceipt> {
+  // Idempotency replay (NEXUM-004): if a valid idempotency_key is supplied
+  // AND a prior receipt exists for (key, email), return that receipt as-is.
+  // This must happen BEFORE input_validation so that the cache hit reflects
+  // the original audit trail rather than a fresh "skipped due to upstream"
+  // chain. Email is still required to scope the lookup — a missing/empty
+  // email means we cannot safely match, so we fall through to validation.
+  const idemKey = normalizeIdempotencyKey(input.idempotency_key);
+  if (idemKey && typeof input.email === "string" && input.email.length > 0) {
+    const cachedId = await findCachedReceiptId(idemKey, input.email);
+    if (cachedId) {
+      const prior = await loadReceipt<PurchaseReceipt>(cachedId);
+      if (prior) {
+        return prior;
+      }
+      // Mapping existed but blob disappeared (TTL'd, manually deleted, etc.).
+      // Fall through and mint a fresh receipt; the new mapping will overwrite
+      // the stale one at the end of the flow.
+    }
+  }
+
   const receipt_id = newReceiptId();
   const created_at_iso = nowIso();
   const bundle =
@@ -250,7 +285,7 @@ export async function runPurchase(
     ),
   );
 
-  return finalize(
+  const receipt = await finalize(
     receipt_id,
     created_at_iso,
     firstName,
@@ -261,6 +296,16 @@ export async function runPurchase(
     downloadUrl,
     receiptUrl,
   );
+
+  // NEXUM-004: store the idempotency mapping only on success. Failure
+  // receipts should NOT be cached — a transient downstream failure (e.g.
+  // Brevo email send blip) is exactly the case where the agent's retry
+  // SHOULD re-run, not get the failed receipt back.
+  if (idemKey && receipt.result.status === "success") {
+    await storeIdempotencyMapping(idemKey, input.email, receipt.receipt_id);
+  }
+
+  return receipt;
 }
 
 async function finalize(
