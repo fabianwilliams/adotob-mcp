@@ -1,0 +1,72 @@
+{
+  "name": "Adotob MCP Storefront",
+  "description": "Public agent-callable storefront for the Adotob Agent Reliability Kit. Calls return an audit-trail receipt enumerating every supervision-layer check that fired (input validation, rate limit, daily cost ceiling, lead capture, download-token mint, fulfillment dispatch). Receipt URL is publicly readable for 30 days. Side-effects: lead upserted to CRM, JOSE token minted (24h expiry), Brevo transactional email dispatched, receipt blob persisted to public-read storage.",
+  "url": "https://mcp.adotob.com/api/a2a/mcp",
+  "version": "1.1.0",
+  "provider": {
+    "organization": "Adotob Solutions",
+    "url": "https://adotob.com"
+  },
+  "documentationUrl": "https://github.com/fabianwilliams/adotob-mcp/blob/main/docs/HAPPY-PATH-SOP.md",
+  "license": {
+    "name": "Apache-2.0 (reference implementation)",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0",
+    "note": "OSS reference implementation. Licensed (non-sanitized) Agent Reliability Kit for partner consultancies: https://estore.adotob.com/partners"
+  },
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": true,
+    "idempotency": true
+  },
+  "authentication": {
+    "schemes": ["none"],
+    "note": "Public demo endpoint. Rate-limited (5/hr per IP, 10/24h) and daily-cost-ceiling gated ($5/day). Production deployments via partner license use scoped authentication; see /partners."
+  },
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "purchase_free_bundle",
+      "name": "Purchase Free Trial Bundle",
+      "description": "Request the Adotob Agent Reliability Kit free-trial bundle. Returns an audit-trail receipt with download URL. Requires first_name and email. Strongly recommended: supply idempotency_key (or send Idempotency-Key HTTP header) so a retry on timeout returns the original receipt instead of double-issuing the bundle. Closes NEXUM-004 from the Nexum trust-manifest.",
+      "tags": ["commerce", "fulfillment", "audit-trail", "supervision", "free-tier"],
+      "examples": [
+        "Request the free-trial bundle of the Adotob Agent Reliability Kit for first_name=Alex, email=alex@example.com",
+        "Send the Reliability Kit free trial to my email and return the audit-trail receipt URL",
+        "Call purchase_free_bundle with idempotency_key=ord-2026-05-19-001 to make retries safe"
+      ],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json", "text/markdown"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "first_name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "email": { "type": "string", "format": "email" },
+          "bundle": { "type": "string", "enum": ["free-trial-sample"], "default": "free-trial-sample" },
+          "idempotency_key": { "type": "string", "minLength": 8, "maxLength": 128, "pattern": "^[A-Za-z0-9._-]+$" }
+        },
+        "required": ["first_name", "email"]
+      },
+      "sideEffects": {
+        "data": "Caller's first_name + email upserted to dedicated Brevo CRM list (MCP Demo Leads, list 23) with source=mcp.",
+        "identity": "Contact created or updated in Brevo. No third-party identity-provider call.",
+        "communication": "Brevo transactional email dispatched to the supplied email address.",
+        "issuance": "JOSE HS256 download token minted, 24-hour expiry, signed with the Adotob eStore's shared secret.",
+        "public": "Audit-trail receipt JSON written to Azure Blob, public-read, 30-day TTL. Renders at https://mcp.adotob.com/a2a/receipt/{receipt_id}.",
+        "money": "Free tier — no charge. Paid Stripe variant ships in MVP-2.",
+        "trigger": "No async work enqueued. Synchronous completion."
+      }
+    }
+  ],
+  "related": {
+    "mcp_endpoint": "https://mcp.adotob.com/api/a2a/mcp",
+    "raw_http_endpoint": "https://mcp.adotob.com/api/a2a/purchase",
+    "example_receipts": [
+      "https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_0a96ef3d",
+      "https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_7f1fd149"
+    ],
+    "discipline_doc": "https://github.com/fabianwilliams/agentic-engineering-toolkit/tree/main/agents/announce-intent-before-action",
+    "trademark": "Agent Reliability Kit (TM) is a trademark of Adotob Solutions"
+  }
+}
