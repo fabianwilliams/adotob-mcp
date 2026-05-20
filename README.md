@@ -70,6 +70,12 @@ src/
     download-tokens.ts      JOSE HS256 mint
     audit-trail.ts          Canonical check labels + types
     idempotency.ts          NEXUM-004 fix: (key, email) -> receipt_id Table Storage
+samples/
+  auth0/                    Reference Auth0 + OAuth 2.1 + PKCE integration
+                            for partners. NOT wired into the live storefront.
+                            Maps the 7 announce-intent-before-action side-effect
+                            categories onto Auth0 scopes. Translates the
+                            ConferenceHaven OAuth pattern into TypeScript.
   components/
     receipt-timeline.tsx    3-phase bucketed audit trail
     receipt-header.tsx      Requester / bundle / issued tile
