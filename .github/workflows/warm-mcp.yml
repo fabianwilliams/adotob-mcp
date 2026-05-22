@@ -1,0 +1,29 @@
+name: Warm MCP storefront
+
+# Pings the dynamic routes on mcp.adotob.com every 5 minutes so Azure SWA's
+# Consumption-tier managed functions stay warm and the first user request
+# does not eat a cold-start 500. Public repo, unlimited free Actions minutes.
+#
+# Note: GitHub may delay scheduled runs during peak load; the cron is a
+# target, not a guarantee. 5 minutes is conservative against the typical
+# Azure Functions Consumption idle timeout.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Hit critical URLs
+        run: |
+          for URL in \
+            "https://mcp.adotob.com/" \
+            "https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_0a96ef3d" \
+            "https://mcp.adotob.com/.well-known/agent.json"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 30 "$URL")
+            echo "$URL -> $STATUS"
+          done
