@@ -1,16 +1,21 @@
 name: Warm MCP storefront
 
-# Pings the dynamic routes on mcp.adotob.com every 5 minutes so Azure SWA's
-# Consumption-tier managed functions stay warm and the first user request
-# does not eat a cold-start 500. Public repo, unlimited free Actions minutes.
+# Pings the dynamic routes on mcp.adotob.com during likely viewing windows
+# so Azure SWA's Consumption-tier managed functions stay warm and the first
+# user request does not eat a cold-start 500. This is not a production
+# uptime guarantee; it is a courtesy warmer for the licensing-motion demo.
 #
-# Note: GitHub may delay scheduled runs during peak load; the cron is a
-# target, not a guarantee. 5 minutes is conservative against the typical
-# Azure Functions Consumption idle timeout.
+# Cadence: every 30 minutes, 9am-6pm Eastern Time (13:00-22:00 UTC),
+# Monday-Friday only. About 20 runs per weekday, 0 on weekends. Outside
+# this window, the first hit may cold-start. That is acceptable for an
+# OSS demo. Public repo means Actions minutes are free either way.
+#
+# GitHub may delay scheduled runs during peak load; the cron is a target,
+# not a guarantee.
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/30 13-22 * * 1-5"
   workflow_dispatch:
 
 jobs:
