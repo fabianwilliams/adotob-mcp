@@ -17,7 +17,8 @@
     "streaming": false,
     "pushNotifications": false,
     "stateTransitionHistory": true,
-    "idempotency": true
+    "idempotency": true,
+    "a2aJsonRpcCompatibility": true
   },
   "authentication": {
     "schemes": ["none"],
@@ -25,6 +26,27 @@
   },
   "defaultInputModes": ["application/json"],
   "defaultOutputModes": ["application/json", "text/markdown"],
+  "supportedInterfaces": [
+    {
+      "protocolBinding": "MCP-JSON-RPC",
+      "protocolVersion": "2025-06-18",
+      "url": "https://mcp.adotob.com/api/a2a/mcp",
+      "methods": ["initialize", "tools/list", "tools/call"]
+    },
+    {
+      "protocolBinding": "A2A-JSON-RPC-COMPAT",
+      "protocolVersion": "1.0.0-compatible",
+      "url": "https://mcp.adotob.com/api/a2a/mcp",
+      "methods": ["SendMessage", "message/send"],
+      "note": "Compatibility bridge for clients that discover this as an A2A endpoint. The canonical business action is still purchase_free_bundle."
+    },
+    {
+      "protocolBinding": "HTTP-JSON",
+      "protocolVersion": "1.0.0",
+      "url": "https://mcp.adotob.com/api/a2a/purchase",
+      "methods": ["POST"]
+    }
+  ],
   "skills": [
     {
       "id": "purchase_free_bundle",
