@@ -25,6 +25,11 @@ A public MCP server that processes a real free-trial-bundle request, returns an 
 
 You do **not** need: a bearer token, API key, manual tool definition, or any LLM-provider API access (unless you are doing Path B with raw HTTP).
 
+For protocol reviewers or anyone testing from a work machine without configuring
+an MCP client first, use the [SME Testing Guide](./SME-TESTING.md). It includes
+a Node.js smoke script, PowerShell commands, raw curl checks, and a safe default
+path that does not send a fulfillment email.
+
 ---
 
 ## Path A — Zero-friction (any MCP-capable client)

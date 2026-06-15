@@ -8,6 +8,8 @@
 
 **Try it in 2 minutes →** [Happy-Path SOP (with screenshots from two real worked examples)](docs/HAPPY-PATH-SOP.md)
 
+**Protocol / SME test guide →** [SME Testing Guide](docs/SME-TESTING.md)
+
 **See it produce a receipt:**
 - Claude Desktop (hosted): [`rcpt_2026-05-16_0a96ef3d`](https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_0a96ef3d)
 - LM Studio + Qwen3.6 27B (fully local, no cloud): [`rcpt_2026-05-16_7f1fd149`](https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_7f1fd149)
@@ -82,6 +84,7 @@ samples/
     receipt-share.tsx       Copy-link + share-on-X
 docs/
   HAPPY-PATH-SOP.md         Operator-verified walkthrough (16 screenshots)
+  SME-TESTING.md            Public smoke-test guide + Darrel SME review note
 public/
   img/sop/                  Worked-example screenshots
 ```
