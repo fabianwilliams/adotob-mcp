@@ -4,7 +4,7 @@
  * Background: `purchase_free_bundle` is a mutating operation (mints a receipt,
  * sends an email, issues a download URL). An agent that retries on timeout
  * — common pattern — would double-issue the bundle and double-fire the email.
- * The runtime rate-limit (5/hr) and cost-ceiling do NOT protect against this
+ * The runtime rate-limit (12/hr) and cost-ceiling do NOT protect against this
  * because both retries fall inside the same window.
  *
  * Fix: accept an idempotency_key (input arg) or `Idempotency-Key` HTTP

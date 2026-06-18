@@ -7,6 +7,16 @@ const baseUrl = (process.env.ADOTOB_BASE_URL || "https://mcp.adotob.com").replac
 const testEmail = process.env.ADOTOB_TEST_EMAIL || "";
 const testFirstName = process.env.ADOTOB_TEST_FIRST_NAME || "Smoke";
 const idSuffix = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
+const liveMode = Boolean(testEmail);
+
+function truncate(text, maxLength = 2000) {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength)}... [truncated]`;
+}
+
+function formatBody(json) {
+  return truncate(JSON.stringify(json, null, 2));
+}
 
 async function postJson(path, body) {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -24,7 +34,7 @@ async function postJson(path, body) {
   } catch {
     throw new Error(`${path} returned non-JSON HTTP ${response.status}: ${text}`);
   }
-  return { status: response.status, json };
+  return { status: response.status, json, path };
 }
 
 async function getJson(path) {
@@ -38,13 +48,24 @@ async function getJson(path) {
   } catch {
     throw new Error(`${path} returned non-JSON HTTP ${response.status}: ${text}`);
   }
-  return { status: response.status, json };
+  return { status: response.status, json, path };
 }
 
-function assert(condition, message) {
+function assert(condition, message, response) {
   if (!condition) {
-    throw new Error(message);
+    const details = response
+      ? `\n${response.path} returned HTTP ${response.status}\n${formatBody(response.json)}`
+      : "";
+    throw new Error(`${message}${details}`);
   }
+}
+
+function assertStatus(response, expected, message) {
+  assert(
+    response.status === expected,
+    `${message}; expected HTTP ${expected}, got HTTP ${response.status}`,
+    response,
+  );
 }
 
 function logPass(message) {
@@ -61,7 +82,7 @@ async function main() {
   console.log("");
 
   const agentCard = await getJson("/.well-known/agent.json");
-  assert(agentCard.status === 200, "agent card should return HTTP 200");
+  assertStatus(agentCard, 200, "agent card should return HTTP 200");
   assert(agentCard.json.url, "agent card should include url");
   assert(
     Array.isArray(agentCard.json.supportedInterfaces),
@@ -81,8 +102,12 @@ async function main() {
     method: "initialize",
     params: {},
   });
-  assert(initialize.status === 200, "initialize should return HTTP 200");
-  assert(initialize.json.result?.serverInfo?.name, "initialize should return serverInfo");
+  assertStatus(initialize, 200, "initialize should return HTTP 200");
+  assert(
+    initialize.json.result?.serverInfo?.name,
+    "initialize should return serverInfo",
+    initialize,
+  );
   logPass(`initialize returned ${initialize.json.result.serverInfo.name}`);
 
   const toolsList = await postJson("/api/a2a/mcp", {
@@ -91,10 +116,11 @@ async function main() {
     method: "tools/list",
     params: {},
   });
-  assert(toolsList.status === 200, "tools/list should return HTTP 200");
+  assertStatus(toolsList, 200, "tools/list should return HTTP 200");
   assert(
     toolsList.json.result?.tools?.some((tool) => tool.name === "purchase_free_bundle"),
     "tools/list should include purchase_free_bundle",
+    toolsList,
   );
   logPass("tools/list exposes purchase_free_bundle");
 
@@ -110,62 +136,72 @@ async function main() {
       },
     },
   });
-  assert(inputRequired.status === 200, "A2A input-required call should return HTTP 200");
+  assertStatus(inputRequired, 200, "A2A input-required call should return HTTP 200");
   assert(
     inputRequired.json.result?.task?.status?.state === "TASK_STATE_INPUT_REQUIRED",
     "A2A call without purchase details should ask for input",
+    inputRequired,
   );
   logPass("A2A SendMessage returns TASK_STATE_INPUT_REQUIRED instead of 500");
 
-  const invalidMcp = await postJson("/api/a2a/mcp", {
-    jsonrpc: "2.0",
-    id: "mcp-invalid",
-    method: "tools/call",
-    params: {
-      tool: "purchase_free_bundle",
-      input: {
-        firstName: "Smoke",
-        email: "not-an-email",
-        idempotencyKey: `smoke-invalid-${idSuffix}`,
+  if (liveMode) {
+    logInfo(
+      "Live fulfillment mode enabled; skipping negative-path probes to stay under the public rate limit.",
+    );
+  } else {
+    const invalidMcp = await postJson("/api/a2a/mcp", {
+      jsonrpc: "2.0",
+      id: "mcp-invalid",
+      method: "tools/call",
+      params: {
+        tool: "purchase_free_bundle",
+        input: {
+          firstName: "Smoke",
+          email: "not-an-email",
+          idempotencyKey: `smoke-invalid-${idSuffix}`,
+        },
       },
-    },
-  });
-  assert(invalidMcp.status === 200, "invalid MCP call should return JSON-RPC HTTP 200");
-  assert(
-    invalidMcp.json.result?.result?.status === "failure",
-    "invalid MCP call should return a failure receipt",
-  );
-  assert(
-    invalidMcp.json.result?.checks?.[0]?.id === "input_validation",
-    "invalid MCP call should fail at input_validation",
-  );
-  logPass(
-    `invalid MCP call produced controlled failure receipt ${invalidMcp.json.result.receipt_id}`,
-  );
+    });
+    assertStatus(invalidMcp, 200, "invalid MCP call should return JSON-RPC HTTP 200");
+    assert(
+      invalidMcp.json.result?.result?.status === "failure",
+      "invalid MCP call should return a failure receipt",
+      invalidMcp,
+    );
+    assert(
+      invalidMcp.json.result?.checks?.[0]?.id === "input_validation",
+      "invalid MCP call should fail at input_validation",
+      invalidMcp,
+    );
+    logPass(
+      `invalid MCP call produced controlled failure receipt ${invalidMcp.json.result.receipt_id}`,
+    );
 
-  const invalidA2a = await postJson("/api/a2a/mcp", {
-    jsonrpc: "2.0",
-    id: "a2a-invalid",
-    method: "message/send",
-    params: {
-      message: {
-        messageId: `smoke-invalid-${idSuffix}`,
-        role: "ROLE_USER",
-        parts: [{ text: "Request the free bundle" }],
+    const invalidA2a = await postJson("/api/a2a/mcp", {
+      jsonrpc: "2.0",
+      id: "a2a-invalid",
+      method: "message/send",
+      params: {
+        message: {
+          messageId: `smoke-invalid-${idSuffix}`,
+          role: "ROLE_USER",
+          parts: [{ text: "Request the free bundle" }],
+        },
+        purchase: {
+          first_name: "Smoke",
+          email: "not-an-email",
+          idempotency_key: `smoke-a2a-invalid-${idSuffix}`,
+        },
       },
-      purchase: {
-        first_name: "Smoke",
-        email: "not-an-email",
-        idempotency_key: `smoke-a2a-invalid-${idSuffix}`,
-      },
-    },
-  });
-  assert(invalidA2a.status === 200, "invalid A2A call should return HTTP 200");
-  assert(
-    invalidA2a.json.result?.task?.status?.state === "TASK_STATE_FAILED",
-    "invalid A2A call should return TASK_STATE_FAILED",
-  );
-  logPass("A2A message/send returns a structured failed task for invalid email");
+    });
+    assertStatus(invalidA2a, 200, "invalid A2A call should return HTTP 200");
+    assert(
+      invalidA2a.json.result?.task?.status?.state === "TASK_STATE_FAILED",
+      "invalid A2A call should return TASK_STATE_FAILED",
+      invalidA2a,
+    );
+    logPass("A2A message/send returns a structured failed task for invalid email");
+  }
 
   if (!testEmail) {
     logInfo("Skipping real fulfillment path because ADOTOB_TEST_EMAIL is not set.");
@@ -190,10 +226,11 @@ async function main() {
       },
     },
   });
-  assert(liveFulfillment.status === 200, "live fulfillment should return HTTP 200");
+  assertStatus(liveFulfillment, 200, "live fulfillment should return HTTP 200");
   assert(
     liveFulfillment.json.result?.result?.status === "success",
     "live fulfillment should return success",
+    liveFulfillment,
   );
   logPass(`live fulfillment receipt: ${liveFulfillment.json.result.receipt_id}`);
   logInfo(`receipt URL: ${liveFulfillment.json.result.result.shareable_receipt_url}`);

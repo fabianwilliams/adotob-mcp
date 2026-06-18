@@ -22,7 +22,7 @@
   },
   "authentication": {
     "schemes": ["none"],
-    "note": "Public demo endpoint. Rate-limited (5/hr per IP, 10/24h) and daily-cost-ceiling gated ($5/day). Production deployments via partner license use scoped authentication; see /partners."
+    "note": "Public demo endpoint. Rate-limited (12/hr per IP, 30/24h) and daily-cost-ceiling gated ($5/day). Production deployments via partner license use scoped authentication; see /partners."
   },
   "defaultInputModes": ["application/json"],
   "defaultOutputModes": ["application/json", "text/markdown"],

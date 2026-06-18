@@ -66,7 +66,7 @@ src/
   lib/
     a2a-purchase.ts         6-check orchestrator
     receipt-store.ts        Azure Blob read/write
-    rate-limit.ts           Azure Table counter, 5/hr + 10/24h per IP
+    rate-limit.ts           Azure Table counter, 12/hr + 30/24h per IP
     cost-ceiling.ts         $5/day demo cap
     brevo-mcp.ts            Contact upsert + onboarding email
     download-tokens.ts      JOSE HS256 mint

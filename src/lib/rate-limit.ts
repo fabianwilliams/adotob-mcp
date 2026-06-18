@@ -1,7 +1,7 @@
 /**
  * Rate-limit — real implementation backed by Azure Table Storage.
  *
- * Per-IP counters: 5 calls/hour, 10 calls/24h.
+ * Per-IP counters: 12 calls/hour, 30 calls/24h.
  *
  * Storage layout: one table `RateLimitCounters` in the `stadotobmcp`
  * storage account (we reuse AZURE_STORAGE_CONNECTION_STRING_RECEIPTS).
@@ -39,8 +39,8 @@ export interface RateLimitResult {
 }
 
 const TABLE_NAME = "RateLimitCounters";
-const HOURLY_CAP = 5;
-const DAILY_CAP = 10;
+const HOURLY_CAP = 12;
+const DAILY_CAP = 30;
 
 let cachedTableClient: TableClient | null = null;
 let tableEnsured = false;

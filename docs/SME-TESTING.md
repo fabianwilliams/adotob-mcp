@@ -73,6 +73,11 @@ The default run is safe: it does not send a real fulfillment email because it
 does not provide a valid email address. It checks discovery, MCP, A2A-compatible
 input-required behavior, and controlled failure receipts.
 
+The public endpoint is rate-limited at 12 calls/hour and 30 calls/24h per IP.
+The default smoke stays below that cap. Live fulfillment mode skips the two
+negative-path probes so a reviewer can usually run one default smoke and one
+real fulfillment smoke from the same network without tripping the hourly limit.
+
 Expected shape:
 
 ```text
@@ -89,6 +94,9 @@ Expected shape:
 
 Use this only with an inbox you control. It upserts a lead, mints a download
 token, sends an email, and returns a public receipt URL.
+
+Use `ADOTOB_TEST_FIRST_NAME` exactly. `ADOTOB_TEST_FIRSTNAME` is ignored and the
+script falls back to `Smoke`.
 
 macOS/Linux:
 
@@ -117,6 +125,23 @@ node scripts\smoke-agent-storefront.mjs
 set ADOTOB_TEST_FIRST_NAME=
 set ADOTOB_TEST_EMAIL=
 ```
+
+Expected live-mode shape:
+
+```text
+[pass] agent card advertises MCP, A2A-compatible JSON-RPC, and raw HTTP
+[pass] initialize returned adotob-mcp-storefront
+[pass] tools/list exposes purchase_free_bundle
+[pass] A2A SendMessage returns TASK_STATE_INPUT_REQUIRED instead of 500
+[info] Live fulfillment mode enabled; skipping negative-path probes to stay under the public rate limit.
+[pass] live fulfillment receipt: ...
+[info] receipt URL: ...
+[info] Check the test inbox for the fulfillment email.
+```
+
+If the script fails, it prints the HTTP status and compact JSON response body.
+For example, a `429` response means the public demo rate limit has been hit for
+that network IP; wait for the hourly window or test from a different network.
 
 ## Raw Curl Checks
 
@@ -205,7 +230,8 @@ Known limitations:
 - The A2A support is a compatibility bridge, not a full A2A task lifecycle
   server.
 - The public demo is unauthenticated and protected by rate limits and a daily
-  cost ceiling. Partner deployments should add scoped auth.
+  cost ceiling. The current public limit is 12 calls/hour and 30 calls/24h per
+  IP. Partner deployments should add scoped auth.
 
 What matters for this test:
 

@@ -50,7 +50,7 @@ export default function HomePage() {
           </a>
         </div>
         <p className="text-xs text-[#8888a0]/60 mt-12 italic">
-          The MCP endpoint is rate-limited (5/hr per IP, 10/24h) and gated by a $5/day cost ceiling. Receipt URLs are publicly readable for 30 days.
+          The MCP endpoint is rate-limited (12/hr per IP, 30/24h) and gated by a $5/day cost ceiling. Receipt URLs are publicly readable for 30 days.
         </p>
       </div>
     </main>
