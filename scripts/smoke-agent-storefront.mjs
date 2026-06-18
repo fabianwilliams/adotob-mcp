@@ -85,16 +85,33 @@ async function main() {
   assertStatus(agentCard, 200, "agent card should return HTTP 200");
   assert(agentCard.json.url, "agent card should include url");
   assert(
-    Array.isArray(agentCard.json.supportedInterfaces),
-    "agent card should include supportedInterfaces",
+    agentCard.json.capabilities?.a2aJsonRpcCompatibility === true,
+    "agent card should declare A2A JSON-RPC compatibility",
+    agentCard,
+  );
+  logPass("agent card exposes the A2A-compatible storefront bridge");
+
+  const aiCatalog = await getJson("/.well-known/ai-catalog.json");
+  assertStatus(aiCatalog, 200, "AI Catalog should return HTTP 200");
+  assert(Array.isArray(aiCatalog.json.entries), "AI Catalog should include entries", aiCatalog);
+  assert(
+    aiCatalog.json.entries.some((entry) => entry.type === "application/mcp-server+json"),
+    "AI Catalog should include an MCP server entry",
+    aiCatalog,
   );
   assert(
-    agentCard.json.supportedInterfaces.some(
-      (iface) => iface.protocolBinding === "A2A-JSON-RPC-COMPAT",
-    ),
-    "agent card should advertise A2A-JSON-RPC-COMPAT",
+    aiCatalog.json.entries.some((entry) => entry.type === "application/a2a-agent-card+json"),
+    "AI Catalog should include an A2A agent-card entry",
+    aiCatalog,
   );
-  logPass("agent card advertises MCP, A2A-compatible JSON-RPC, and raw HTTP");
+  assert(
+    aiCatalog.json.entries.some((entry) =>
+      entry.capabilities?.includes("purchase_free_bundle"),
+    ),
+    "AI Catalog should include purchase_free_bundle as a discoverable capability",
+    aiCatalog,
+  );
+  logPass("AI Catalog advertises MCP, A2A-compatible, and raw HTTP resources");
 
   const initialize = await postJson("/api/a2a/mcp", {
     jsonrpc: "2.0",

@@ -1,0 +1,81 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Adotob Solutions",
+    "identifier": "did:web:mcp.adotob.com",
+    "documentationUrl": "https://github.com/fabianwilliams/adotob-mcp/blob/main/docs/SME-TESTING.md"
+  },
+  "entries": [
+    {
+      "identifier": "urn:ai:mcp.adotob.com:mcp:storefront",
+      "displayName": "Adotob MCP Storefront",
+      "type": "application/mcp-server+json",
+      "description": "MCP JSON-RPC storefront for requesting the Adotob Agent Reliability Kit free-trial bundle. Calls return audit-trail receipts for input validation, rate limiting, cost ceiling, lead capture, download-token minting, and fulfillment dispatch.",
+      "tags": ["mcp", "commerce", "audit-trail", "agent-reliability", "free-tier"],
+      "capabilities": ["initialize", "tools/list", "tools/call", "purchase_free_bundle"],
+      "representativeQueries": [
+        "request the Adotob Agent Reliability Kit free trial",
+        "test an MCP commerce endpoint that returns an audit-trail receipt",
+        "find a demo of agent-accessible storefront fulfillment",
+        "call a tool that sends a download link and receipt",
+        "evaluate side-effect receipts for agent commerce"
+      ],
+      "version": "1.2.0",
+      "updatedAt": "2026-06-18T00:00:00Z",
+      "data": {
+        "name": "adotob-mcp-storefront",
+        "transport": "http-json-rpc",
+        "url": "https://mcp.adotob.com/api/a2a/mcp",
+        "methods": ["initialize", "tools/list", "tools/call"],
+        "tools": [
+          {
+            "name": "purchase_free_bundle",
+            "description": "Request the Adotob Agent Reliability Kit free-trial bundle and receive an audit-trail receipt plus download URL."
+          }
+        ],
+        "authentication": {
+          "schemes": ["none"],
+          "note": "Public demo endpoint. Rate-limited at 12/hr per IP and 30/24h; daily-cost-ceiling gated at $5/day."
+        }
+      }
+    },
+    {
+      "identifier": "urn:ai:mcp.adotob.com:a2a:storefront-compat",
+      "displayName": "Adotob Storefront A2A Compatibility Card",
+      "type": "application/a2a-agent-card+json",
+      "url": "https://mcp.adotob.com/.well-known/agent.json",
+      "description": "A2A-compatible discovery card for the Adotob storefront compatibility bridge. The canonical business action remains purchase_free_bundle.",
+      "tags": ["a2a", "agent-card", "compatibility", "commerce"],
+      "capabilities": ["SendMessage", "message/send"],
+      "representativeQueries": [
+        "find an A2A-compatible storefront agent",
+        "send an A2A-style message to request a free trial bundle",
+        "test A2A compatibility for agent commerce"
+      ],
+      "version": "1.2.0",
+      "updatedAt": "2026-06-18T00:00:00Z"
+    },
+    {
+      "identifier": "urn:ai:mcp.adotob.com:api:storefront-purchase",
+      "displayName": "Adotob Storefront Raw HTTP Purchase API",
+      "type": "application/json",
+      "description": "Raw HTTP fallback for clients that do not speak MCP or A2A-compatible JSON-RPC. Performs the same free-trial bundle request and returns the same receipt shape.",
+      "tags": ["http", "json", "commerce", "fallback"],
+      "capabilities": ["POST /api/a2a/purchase"],
+      "representativeQueries": [
+        "call a raw HTTP endpoint for an agent storefront",
+        "request a free trial bundle without MCP",
+        "test fallback JSON commerce fulfillment"
+      ],
+      "version": "1.2.0",
+      "updatedAt": "2026-06-18T00:00:00Z",
+      "data": {
+        "method": "POST",
+        "url": "https://mcp.adotob.com/api/a2a/purchase",
+        "contentType": "application/json",
+        "requiredFields": ["first_name", "email"],
+        "optionalFields": ["bundle", "idempotency_key"]
+      }
+    }
+  ]
+}

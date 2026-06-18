@@ -4,7 +4,9 @@
 
 **Live endpoint:** `https://mcp.adotob.com/api/a2a/mcp`
 
-**Agent-discovery card (Google A2A `/.well-known/agent.json`):** `https://mcp.adotob.com/.well-known/agent.json`
+**A2A-compatible agent card (`/.well-known/agent.json`):** `https://mcp.adotob.com/.well-known/agent.json`
+
+**AI Catalog / ARD discovery (`/.well-known/ai-catalog.json`):** `https://mcp.adotob.com/.well-known/ai-catalog.json`
 
 **Try it in 2 minutes →** [Happy-Path SOP (with screenshots from two real worked examples)](docs/HAPPY-PATH-SOP.md)
 

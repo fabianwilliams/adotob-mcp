@@ -22,7 +22,8 @@ This is the Proven / Better / New framing:
 
 | Surface | URL | Purpose | Status |
 | --- | --- | --- | --- |
-| Agent card | `/.well-known/agent.json` | Discovery metadata for A2A-style clients | Live in this repo |
+| AI Catalog | `/.well-known/ai-catalog.json` | ARD/AI Catalog discovery metadata for MCP, A2A-compatible, and HTTP resources | Live in this repo |
+| Agent card | `/.well-known/agent.json` | A2A-compatible discovery metadata for A2A-style clients | Live in this repo |
 | MCP endpoint | `/api/a2a/mcp` | MCP JSON-RPC `initialize`, `tools/list`, `tools/call` | Live |
 | A2A compatibility bridge | `/api/a2a/mcp` | Accepts `SendMessage` and `message/send` JSON-RPC calls | Live in this repo |
 | Raw HTTP endpoint | `/api/a2a/purchase` | Direct POST for non-MCP clients | Live |
@@ -84,8 +85,9 @@ Do not ask Darrel to re-test until these pass:
 5. Local MCP `tools/call` returns a receipt or a controlled failure receipt.
 6. Local A2A `SendMessage` with `params.purchase` returns a completed or failed
    task object, never a 500.
-7. Live `/.well-known/agent.json` resolves and points to the live endpoint.
-8. Live raw HTTP fallback still works.
+7. Live `/.well-known/agent.json` resolves and points to the A2A-compatible endpoint.
+8. Live `/.well-known/ai-catalog.json` resolves and lists the MCP server, A2A-compatible card, and raw HTTP fallback.
+9. Live raw HTTP fallback still works.
 
 ## SME Test Ask
 

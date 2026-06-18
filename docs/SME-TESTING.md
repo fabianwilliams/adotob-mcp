@@ -6,6 +6,7 @@ their own machine.
 Live surfaces:
 
 - Agent card: `https://mcp.adotob.com/.well-known/agent.json`
+- AI Catalog: `https://mcp.adotob.com/.well-known/ai-catalog.json`
 - MCP endpoint: `https://mcp.adotob.com/api/a2a/mcp`
 - Raw HTTP fallback: `https://mcp.adotob.com/api/a2a/purchase`
 - Source: `https://github.com/fabianwilliams/adotob-mcp`
@@ -19,8 +20,10 @@ protocol path could return 500s for his client shape.
 
 The fix keeps the business action the same and hardens the protocol surface:
 
-- `/.well-known/agent.json` now declares `supportedInterfaces` for MCP,
-  A2A-compatible JSON-RPC, and raw HTTP.
+- `/.well-known/ai-catalog.json` now declares the MCP server, A2A-compatible
+  card, and raw HTTP fallback as discoverable resources.
+- `/.well-known/agent.json` stays focused on the A2A-compatible storefront
+  bridge.
 - `/api/a2a/mcp` still supports MCP `initialize`, `tools/list`, and
   `tools/call`.
 - `/api/a2a/mcp` now accepts A2A-style `SendMessage` and `message/send`.
@@ -49,8 +52,9 @@ After pushing:
 
 - GitHub Actions deploy completed successfully:
   `https://github.com/fabianwilliams/adotob-mcp/actions/runs/27556425787`
-- Live `/.well-known/agent.json` advertises `a2aJsonRpcCompatibility` and
-  `supportedInterfaces`.
+- Live `/.well-known/agent.json` advertises `a2aJsonRpcCompatibility`.
+- Live `/.well-known/ai-catalog.json` advertises MCP, A2A-compatible, and raw
+  HTTP resources.
 - Live A2A `SendMessage` returns `TASK_STATE_INPUT_REQUIRED` instead of a 500.
 
 ## Run From Any Machine
@@ -81,7 +85,8 @@ real fulfillment smoke from the same network without tripping the hourly limit.
 Expected shape:
 
 ```text
-[pass] agent card advertises MCP, A2A-compatible JSON-RPC, and raw HTTP
+[pass] agent card exposes the A2A-compatible storefront bridge
+[pass] AI Catalog advertises MCP, A2A-compatible, and raw HTTP resources
 [pass] initialize returned adotob-mcp-storefront
 [pass] tools/list exposes purchase_free_bundle
 [pass] A2A SendMessage returns TASK_STATE_INPUT_REQUIRED instead of 500
@@ -129,7 +134,8 @@ set ADOTOB_TEST_EMAIL=
 Expected live-mode shape:
 
 ```text
-[pass] agent card advertises MCP, A2A-compatible JSON-RPC, and raw HTTP
+[pass] agent card exposes the A2A-compatible storefront bridge
+[pass] AI Catalog advertises MCP, A2A-compatible, and raw HTTP resources
 [pass] initialize returned adotob-mcp-storefront
 [pass] tools/list exposes purchase_free_bundle
 [pass] A2A SendMessage returns TASK_STATE_INPUT_REQUIRED instead of 500
@@ -149,6 +155,12 @@ Discovery:
 
 ```bash
 curl -sS https://mcp.adotob.com/.well-known/agent.json
+```
+
+AI Catalog discovery:
+
+```bash
+curl -sS https://mcp.adotob.com/.well-known/ai-catalog.json
 ```
 
 MCP initialize:
@@ -194,8 +206,9 @@ We pushed a fix here:
 https://github.com/fabianwilliams/adotob-mcp/commit/f3a7a4e
 
 What changed:
-- The agent card now advertises MCP, A2A-compatible JSON-RPC, and raw HTTP
-  interfaces.
+- The AI Catalog now advertises MCP, A2A-compatible JSON-RPC, and raw HTTP
+  resources.
+- The agent card stays focused on the A2A-compatible bridge.
 - The MCP endpoint still supports initialize/tools/list/tools/call.
 - The same endpoint now accepts A2A-style SendMessage/message/send as a
   compatibility bridge.
@@ -220,6 +233,9 @@ https://mcp.adotob.com/api/a2a/mcp
 
 Agent card:
 https://mcp.adotob.com/.well-known/agent.json
+
+AI Catalog:
+https://mcp.adotob.com/.well-known/ai-catalog.json
 ```
 
 ## Reviewer Notes

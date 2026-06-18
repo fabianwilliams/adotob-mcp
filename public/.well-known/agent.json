@@ -2,7 +2,7 @@
   "name": "Adotob MCP Storefront",
   "description": "Public agent-callable storefront for the Adotob Agent Reliability Kit. Calls return an audit-trail receipt enumerating every supervision-layer check that fired (input validation, rate limit, daily cost ceiling, lead capture, download-token mint, fulfillment dispatch). Receipt URL is publicly readable for 30 days. Side-effects: lead upserted to CRM, JOSE token minted (24h expiry), Brevo transactional email dispatched, receipt blob persisted to public-read storage.",
   "url": "https://mcp.adotob.com/api/a2a/mcp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "provider": {
     "organization": "Adotob Solutions",
     "url": "https://adotob.com"
@@ -26,27 +26,6 @@
   },
   "defaultInputModes": ["application/json"],
   "defaultOutputModes": ["application/json", "text/markdown"],
-  "supportedInterfaces": [
-    {
-      "protocolBinding": "MCP-JSON-RPC",
-      "protocolVersion": "2025-06-18",
-      "url": "https://mcp.adotob.com/api/a2a/mcp",
-      "methods": ["initialize", "tools/list", "tools/call"]
-    },
-    {
-      "protocolBinding": "A2A-JSON-RPC-COMPAT",
-      "protocolVersion": "1.0.0-compatible",
-      "url": "https://mcp.adotob.com/api/a2a/mcp",
-      "methods": ["SendMessage", "message/send"],
-      "note": "Compatibility bridge for clients that discover this as an A2A endpoint. The canonical business action is still purchase_free_bundle."
-    },
-    {
-      "protocolBinding": "HTTP-JSON",
-      "protocolVersion": "1.0.0",
-      "url": "https://mcp.adotob.com/api/a2a/purchase",
-      "methods": ["POST"]
-    }
-  ],
   "skills": [
     {
       "id": "purchase_free_bundle",
@@ -84,6 +63,7 @@
   "related": {
     "mcp_endpoint": "https://mcp.adotob.com/api/a2a/mcp",
     "raw_http_endpoint": "https://mcp.adotob.com/api/a2a/purchase",
+    "ai_catalog": "https://mcp.adotob.com/.well-known/ai-catalog.json",
     "example_receipts": [
       "https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_0a96ef3d",
       "https://mcp.adotob.com/a2a/receipt/rcpt_2026-05-16_7f1fd149"
